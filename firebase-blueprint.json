@@ -1,0 +1,530 @@
+{
+  "entities": {
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Trusted administrator membership marker document.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Authenticated Firebase UID of the administrator.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        }
+      },
+      "required": ["uid", "createdAt"]
+    },
+    "UserPublicProfile": {
+      "title": "UserPublicProfile",
+      "description": "Non-PII store profile for an authenticated merchant.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Owner Firebase UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the merchant user.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "storeName": {
+          "type": "string",
+          "description": "Name of the POS store outlet.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": ["uid", "displayName", "storeName", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII document strictly accessible only by the owner or admin.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Owner Firebase UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "description": "Verified account email address.",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": ["uid", "email", "createdAt", "updatedAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "POS menu item and inventory stock record.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the merchant workspace owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sku": {
+          "type": "string",
+          "description": "Unique stock keeping unit code.",
+          "minLength": 2,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Menu item display name.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "description": "Menu category.",
+          "enum": ["Coffee", "Non Coffee", "Food", "Snack", "Dessert"],
+          "minLength": 4,
+          "maxLength": 20
+        },
+        "description": {
+          "type": "string",
+          "description": "Short menu item description.",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "priceCents": {
+          "type": "integer",
+          "description": "Unit selling price in cents."
+        },
+        "costCents": {
+          "type": "integer",
+          "description": "Unit cost of goods in cents."
+        },
+        "stock": {
+          "type": "integer",
+          "description": "Current available inventory units."
+        },
+        "minStock": {
+          "type": "integer",
+          "description": "Low-stock alert threshold."
+        },
+        "imageKey": {
+          "type": "string",
+          "description": "Asset key identifier for menu photography.",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "sku",
+        "name",
+        "category",
+        "description",
+        "priceCents",
+        "costCents",
+        "stock",
+        "minStock",
+        "imageKey",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "POS sales transaction header.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the merchant workspace owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "orderNumber": {
+          "type": "string",
+          "description": "Human-readable order code.",
+          "minLength": 3,
+          "maxLength": 24,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "orderType": {
+          "type": "string",
+          "description": "Fulfillment mode.",
+          "enum": ["Delivery", "Dine in", "Take away"],
+          "minLength": 6,
+          "maxLength": 16
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Digital or cash payment channel.",
+          "enum": ["QRIS", "E-Wallet", "Card", "Cash"],
+          "minLength": 4,
+          "maxLength": 16
+        },
+        "paymentRef": {
+          "type": "string",
+          "description": "Payment gateway reference identifier.",
+          "minLength": 3,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "subtotalCents": {
+          "type": "integer",
+          "description": "Subtotal before discounts in cents."
+        },
+        "discountCents": {
+          "type": "integer",
+          "description": "Discount applied in cents."
+        },
+        "totalCents": {
+          "type": "integer",
+          "description": "Final charged amount in cents."
+        },
+        "itemCount": {
+          "type": "integer",
+          "description": "Total quantity of items in the order."
+        },
+        "itemsLabel": {
+          "type": "string",
+          "description": "Readable summary of ordered items.",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        "cashierName": {
+          "type": "string",
+          "description": "Name of cashier handling checkout.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "status": {
+          "type": "string",
+          "description": "Order lifecycle status; refunded is terminal.",
+          "enum": ["preparing", "completed", "refunded"],
+          "minLength": 7,
+          "maxLength": 16
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "orderNumber",
+        "orderType",
+        "paymentMethod",
+        "paymentRef",
+        "subtotalCents",
+        "discountCents",
+        "totalCents",
+        "itemCount",
+        "itemsLabel",
+        "cashierName",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "OrderLineItem": {
+      "title": "OrderLineItem",
+      "description": "Individual line item sub-document belonging to an Order.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the merchant workspace owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Parent order document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Referenced product ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productName": {
+          "type": "string",
+          "description": "Snapshot name of the product.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "size": {
+          "type": "string",
+          "description": "Cup/portion size variant.",
+          "enum": ["Small", "Large"],
+          "minLength": 5,
+          "maxLength": 5
+        },
+        "quantity": {
+          "type": "integer",
+          "description": "Units purchased."
+        },
+        "unitPriceCents": {
+          "type": "integer",
+          "description": "Unit price in cents at time of purchase."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "orderId",
+        "productId",
+        "productName",
+        "size",
+        "quantity",
+        "unitPriceCents",
+        "createdAt"
+      ]
+    },
+    "StaffMember": {
+      "title": "StaffMember",
+      "description": "Store staff profile and granular RBAC capability flags.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the merchant workspace owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Staff full name.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "staffRole": {
+          "type": "string",
+          "description": "Assigned role label.",
+          "enum": ["Admin", "Manager", "Cashier", "Inventory"],
+          "minLength": 5,
+          "maxLength": 16
+        },
+        "shiftLabel": {
+          "type": "string",
+          "description": "Assigned shift schedule.",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether staff account is active."
+        },
+        "canCheckout": {
+          "type": "boolean",
+          "description": "Permission to create POS orders."
+        },
+        "canRefund": {
+          "type": "boolean",
+          "description": "Permission to refund orders."
+        },
+        "canManageInventory": {
+          "type": "boolean",
+          "description": "Permission to edit products and stock."
+        },
+        "canViewAnalytics": {
+          "type": "boolean",
+          "description": "Permission to view analytics and export reports."
+        },
+        "canManageUsers": {
+          "type": "boolean",
+          "description": "Permission to manage staff and roles."
+        },
+        "canManageCloudApi": {
+          "type": "boolean",
+          "description": "Permission to trigger cloud backups and manage API keys."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "staffRole",
+        "shiftLabel",
+        "active",
+        "canCheckout",
+        "canRefund",
+        "canManageInventory",
+        "canViewAnalytics",
+        "canManageUsers",
+        "canManageCloudApi",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CloudBackup": {
+      "title": "CloudBackup",
+      "description": "Cloud snapshot metadata record for disaster recovery.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the merchant workspace owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "label": {
+          "type": "string",
+          "description": "Human-readable backup checkpoint label.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "productCount": {
+          "type": "integer",
+          "description": "Number of products synced in checkpoint."
+        },
+        "orderCount": {
+          "type": "integer",
+          "description": "Number of orders synced in checkpoint."
+        },
+        "staffCount": {
+          "type": "integer",
+          "description": "Number of staff profiles synced in checkpoint."
+        },
+        "totalRevenueCents": {
+          "type": "integer",
+          "description": "Cumulative revenue in cents at backup time."
+        },
+        "status": {
+          "type": "string",
+          "description": "Backup verification status.",
+          "enum": ["verified", "archived"],
+          "minLength": 8,
+          "maxLength": 16
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "label",
+        "productCount",
+        "orderCount",
+        "staffCount",
+        "totalRevenueCents",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Trusted administrator lookup table."
+    },
+    "/users/{userId}/public/{docId}": {
+      "schema": { "$ref": "#/entities/UserPublicProfile" },
+      "description": "Non-PII merchant store profile."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated PII profile strictly accessible only to owner or admin."
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Catalog and real-time stock items owned by merchant."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Real-time daily sales orders owned by merchant."
+    },
+    "/orders/{orderId}/line_items/{lineId}": {
+      "schema": { "$ref": "#/entities/OrderLineItem" },
+      "description": "Line items subcollection gated by parent Order ownership."
+    },
+    "/staff_members/{staffId}": {
+      "schema": { "$ref": "#/entities/StaffMember" },
+      "description": "Multi-user staff roster and RBAC capabilities owned by merchant."
+    },
+    "/cloud_backups/{backupId}": {
+      "schema": { "$ref": "#/entities/CloudBackup" },
+      "description": "Cloud backup checkpoints owned by merchant."
+    }
+  }
+}

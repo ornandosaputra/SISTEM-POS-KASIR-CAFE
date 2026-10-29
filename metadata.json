@@ -1,0 +1,6 @@
+{
+  "name": "Purr'Coffee POS — Sistem Kasir & Inventaris Cloud",
+  "description": "Aplikasi Point of Sale (POS) kasir modern dengan laporan penjualan harian real-time, sinkronisasi & backup cloud, manajemen inventaris, dukungan printer termal Bluetooth, pembayaran digital otomatis, multi-user RBAC, dasbor analitik, ekspor PDF/Excel, dan dokumentasi API.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

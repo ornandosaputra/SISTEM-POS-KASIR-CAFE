@@ -1,0 +1,408 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Hardened Primitives ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'ornandosaputra0@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (
+        isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // --- Validation Blueprints ---
+    function isValidAdminRecord(data, targetUid) {
+      return data.keys().hasAll(['uid', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'createdAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+        data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.uid == targetUid &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidUserPublicProfile(data, targetUid) {
+      return data.keys().hasAll(['uid', 'displayName', 'storeName', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'displayName', 'storeName', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+        data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.uid == targetUid &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+        data.storeName is string && data.storeName.size() >= 1 && data.storeName.size() <= 80 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateInfo(data, targetUid) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'createdAt', 'updatedAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 &&
+        data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.uid == targetUid &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll([
+          'ownerId', 'sku', 'name', 'category', 'description',
+          'priceCents', 'costCents', 'stock', 'minStock', 'imageKey',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'sku', 'name', 'category', 'description',
+          'priceCents', 'costCents', 'stock', 'minStock', 'imageKey',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.sku is string && data.sku.size() >= 2 && data.sku.size() <= 32 &&
+        data.sku.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        data.category is string && data.category.size() >= 4 && data.category.size() <= 20 &&
+        (data.category in ['Coffee', 'Non Coffee', 'Food', 'Snack', 'Dessert']) &&
+        data.description is string && data.description.size() >= 1 && data.description.size() <= 300 &&
+        data.priceCents is int && data.priceCents >= 0 && data.priceCents <= 1000000000 &&
+        data.costCents is int && data.costCents >= 0 && data.costCents <= 1000000000 &&
+        data.stock is int && data.stock >= 0 && data.stock <= 1000000 &&
+        data.minStock is int && data.minStock >= 0 && data.minStock <= 100000 &&
+        data.imageKey is string && data.imageKey.size() >= 1 && data.imageKey.size() <= 64 &&
+        data.imageKey.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll([
+          'ownerId', 'orderNumber', 'orderType', 'paymentMethod', 'paymentRef',
+          'subtotalCents', 'discountCents', 'totalCents', 'itemCount', 'itemsLabel',
+          'cashierName', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'orderNumber', 'orderType', 'paymentMethod', 'paymentRef',
+          'subtotalCents', 'discountCents', 'totalCents', 'itemCount', 'itemsLabel',
+          'cashierName', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.orderNumber is string && data.orderNumber.size() >= 3 && data.orderNumber.size() <= 24 &&
+        data.orderNumber.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.orderType is string && data.orderType.size() >= 6 && data.orderType.size() <= 16 &&
+        (data.orderType in ['Delivery', 'Dine in', 'Take away']) &&
+        data.paymentMethod is string && data.paymentMethod.size() >= 4 && data.paymentMethod.size() <= 16 &&
+        (data.paymentMethod in ['QRIS', 'E-Wallet', 'Card', 'Cash']) &&
+        data.paymentRef is string && data.paymentRef.size() >= 3 && data.paymentRef.size() <= 64 &&
+        data.paymentRef.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.subtotalCents is int && data.subtotalCents >= 0 && data.subtotalCents <= 1000000000 &&
+        data.discountCents is int && data.discountCents >= 0 && data.discountCents <= 1000000000 &&
+        data.totalCents is int && data.totalCents >= 0 && data.totalCents <= 1000000000 &&
+        data.itemCount is int && data.itemCount >= 1 && data.itemCount <= 10000 &&
+        data.itemsLabel is string && data.itemsLabel.size() >= 1 && data.itemsLabel.size() <= 400 &&
+        data.cashierName is string && data.cashierName.size() >= 1 && data.cashierName.size() <= 80 &&
+        data.status is string && data.status.size() >= 7 && data.status.size() <= 16 &&
+        (data.status in ['preparing', 'completed', 'refunded']) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidOrderLineItem(data, parentOrderId) {
+      return data.keys().hasAll([
+          'ownerId', 'orderId', 'productId', 'productName',
+          'size', 'quantity', 'unitPriceCents', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'orderId', 'productId', 'productName',
+          'size', 'quantity', 'unitPriceCents', 'createdAt'
+        ]) &&
+        data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.orderId is string && data.orderId.size() >= 1 && data.orderId.size() <= 128 &&
+        data.orderId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.orderId == parentOrderId &&
+        data.productId is string && data.productId.size() >= 1 && data.productId.size() <= 128 &&
+        data.productId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.productName is string && data.productName.size() >= 1 && data.productName.size() <= 100 &&
+        data.size is string && data.size.size() == 5 &&
+        (data.size in ['Small', 'Large']) &&
+        data.quantity is int && data.quantity >= 1 && data.quantity <= 1000 &&
+        data.unitPriceCents is int && data.unitPriceCents >= 0 && data.unitPriceCents <= 1000000000 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidStaffMember(data) {
+      return data.keys().hasAll([
+          'ownerId', 'name', 'staffRole', 'shiftLabel', 'active',
+          'canCheckout', 'canRefund', 'canManageInventory',
+          'canViewAnalytics', 'canManageUsers', 'canManageCloudApi',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'name', 'staffRole', 'shiftLabel', 'active',
+          'canCheckout', 'canRefund', 'canManageInventory',
+          'canViewAnalytics', 'canManageUsers', 'canManageCloudApi',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+        data.staffRole is string && data.staffRole.size() >= 5 && data.staffRole.size() <= 16 &&
+        (data.staffRole in ['Admin', 'Manager', 'Cashier', 'Inventory']) &&
+        data.shiftLabel is string && data.shiftLabel.size() >= 1 && data.shiftLabel.size() <= 40 &&
+        data.active is bool &&
+        data.canCheckout is bool &&
+        data.canRefund is bool &&
+        data.canManageInventory is bool &&
+        data.canViewAnalytics is bool &&
+        data.canManageUsers is bool &&
+        data.canManageCloudApi is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidCloudBackup(data) {
+      return data.keys().hasAll([
+          'ownerId', 'label', 'productCount', 'orderCount',
+          'staffCount', 'totalRevenueCents', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'label', 'productCount', 'orderCount',
+          'staffCount', 'totalRevenueCents', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+        data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.label is string && data.label.size() >= 1 && data.label.size() <= 100 &&
+        data.productCount is int && data.productCount >= 0 && data.productCount <= 100000 &&
+        data.orderCount is int && data.orderCount >= 0 && data.orderCount <= 1000000 &&
+        data.staffCount is int && data.staffCount >= 0 && data.staffCount <= 10000 &&
+        data.totalRevenueCents is int && data.totalRevenueCents >= 0 && data.totalRevenueCents <= 100000000000 &&
+        data.status is string && data.status.size() >= 8 && data.status.size() <= 16 &&
+        (data.status in ['verified', 'archived']) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list: if false;
+      allow create: if isBootstrappedAdmin() && isValidId(adminId) &&
+        isValidAdminRecord(incoming(), adminId) &&
+        incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isBootstrappedAdmin() && isValidId(adminId);
+    }
+
+    match /users/{userId}/public/{docId} {
+      allow get: if isSignedIn() && isValidId(userId) && isValidId(docId) &&
+        (request.auth.uid == userId || isAdmin());
+      allow list: if false;
+      allow create: if isVerifiedUser() && isValidId(userId) && isValidId(docId) &&
+        request.auth.uid == userId &&
+        isValidUserPublicProfile(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() && isValidId(userId) && isValidId(docId) &&
+        isValidUserPublicProfile(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            request.auth.uid == userId &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'storeName', 'updatedAt'])
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isVerifiedUser() && isValidId(userId) && isValidId(docId) && isAdmin();
+    }
+
+    match /users/{userId}/private/{docId} {
+      allow get: if isSignedIn() && isValidId(userId) && isValidId(docId) &&
+        (request.auth.uid == userId || isAdmin());
+      allow list: if false;
+      allow create: if isVerifiedUser() && isValidId(userId) && isValidId(docId) &&
+        request.auth.uid == userId &&
+        isValidUserPrivateInfo(incoming(), userId) &&
+        incoming().email == request.auth.token.email &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() && isValidId(userId) && isValidId(docId) &&
+        isValidUserPrivateInfo(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            request.auth.uid == userId &&
+            incoming().email == request.auth.token.email &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['email', 'updatedAt'])
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isVerifiedUser() && isValidId(userId) && isValidId(docId) &&
+        (request.auth.uid == userId || isAdmin());
+    }
+
+    match /products/{productId} {
+      allow get: if isSignedIn() && isValidId(productId) &&
+        (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() && isValidId(productId) &&
+        isValidProduct(incoming()) &&
+        incoming().ownerId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() && isValidId(productId) &&
+        isValidProduct(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            existing().ownerId == request.auth.uid &&
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['stock', 'updatedAt']) ||
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'sku', 'name', 'category', 'description', 'priceCents',
+                'costCents', 'stock', 'minStock', 'imageKey', 'updatedAt'
+              ])
+            )
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isVerifiedUser() && isValidId(productId) &&
+        (existing().ownerId == request.auth.uid || isAdmin());
+    }
+
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && isValidId(orderId) &&
+        (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() && isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().ownerId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() && isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            existing().status != 'refunded' &&
+            existing().ownerId == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isVerifiedUser() && isValidId(orderId) && isAdmin();
+
+      match /line_items/{lineId} {
+        allow get: if isSignedIn() && isValidId(orderId) && isValidId(lineId) &&
+          (
+            get(/databases/$(database)/documents/orders/$(orderId)).data.ownerId == request.auth.uid ||
+            isAdmin()
+          );
+        allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+        allow create: if isVerifiedUser() && isValidId(orderId) && isValidId(lineId) &&
+          isValidOrderLineItem(incoming(), orderId) &&
+          incoming().ownerId == request.auth.uid &&
+          incoming().createdAt == request.time &&
+          existsAfter(/databases/$(database)/documents/orders/$(orderId)) &&
+          getAfter(/databases/$(database)/documents/orders/$(orderId)).data.ownerId == request.auth.uid &&
+          existsAfter(/databases/$(database)/documents/products/$(incoming().productId));
+        allow update: if false;
+        allow delete: if isVerifiedUser() && isValidId(orderId) && isValidId(lineId) && isAdmin();
+      }
+    }
+
+    match /staff_members/{staffId} {
+      allow get: if isSignedIn() && isValidId(staffId) &&
+        (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() && isValidId(staffId) &&
+        isValidStaffMember(incoming()) &&
+        incoming().ownerId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() && isValidId(staffId) &&
+        isValidStaffMember(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            existing().ownerId == request.auth.uid &&
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['active', 'updatedAt']) ||
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'name', 'staffRole', 'shiftLabel', 'active',
+                'canCheckout', 'canRefund', 'canManageInventory',
+                'canViewAnalytics', 'canManageUsers', 'canManageCloudApi',
+                'updatedAt'
+              ])
+            )
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isVerifiedUser() && isValidId(staffId) &&
+        (existing().ownerId == request.auth.uid || isAdmin());
+    }
+
+    match /cloud_backups/{backupId} {
+      allow get: if isSignedIn() && isValidId(backupId) &&
+        (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() && isValidId(backupId) &&
+        isValidCloudBackup(incoming()) &&
+        incoming().ownerId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() && isValidId(backupId) &&
+        isValidCloudBackup(incoming()) &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            existing().status != 'archived' &&
+            existing().ownerId == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+          ) ||
+          isAdmin()
+        );
+      allow delete: if isVerifiedUser() && isValidId(backupId) &&
+        (existing().ownerId == request.auth.uid || isAdmin());
+    }
+  }
+}
