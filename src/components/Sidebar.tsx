@@ -79,7 +79,7 @@ export function Sidebar({
   const navContent = (
     <div className="flex flex-col h-full bg-white dark:bg-[#181B20] border-r border-neutral-100 dark:border-neutral-800/80 select-none">
       {/* Brand Wordmark matching Purr'Coffee reference */}
-      <div className="flex items-center justify-between px-7 pt-7 pb-8">
+      <div className="flex items-center justify-between px-5.5 pt-7 pb-6">
         <button
           type="button"
           onClick={() => handleSelect('pos')}
@@ -112,37 +112,39 @@ export function Sidebar({
               key={item.id}
               type="button"
               onClick={() => handleSelect(item.id)}
-              className={`relative w-full flex items-center justify-between px-7 py-3 text-[14px] font-medium transition-colors whitespace-nowrap cursor-pointer ${
+              className={`relative w-full flex items-center justify-between gap-2.5 px-5.5 py-2.5 text-[13.5px] font-medium transition-colors cursor-pointer ${
                 active
                   ? 'text-[#FF9E67]'
                   : 'text-[#4B4B4B] dark:text-neutral-400 hover:text-[#1F1F1F] dark:hover:text-neutral-100'
               }`}
             >
-              <span className="flex items-center gap-3.5">
+              <span className="flex items-center gap-3 min-w-0 flex-1">
                 <Icon
                   className={`w-[18px] h-[18px] shrink-0 ${
                     active ? 'text-[#FF9E67]' : 'text-[#555555] dark:text-neutral-400'
                   }`}
                 />
-                <span>{item.label}</span>
+                <span className="truncate">{item.label}</span>
               </span>
 
-              {isAnalyticsLocked ? (
-                <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
-              ) : (
-                typeof item.badge === 'number' &&
-                item.badge > 0 && (
-                  <span
-                    className={`tabular-nums text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                      item.badgeAlert
-                        ? 'bg-red-500/15 text-red-600 dark:text-red-400'
-                        : 'bg-[#FF9E67] text-white'
-                    }`}
-                  >
-                    {item.badge}
-                  </span>
-                )
-              )}
+              <span className="shrink-0 flex items-center justify-end w-5">
+                {isAnalyticsLocked ? (
+                  <Lock className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
+                ) : (
+                  typeof item.badge === 'number' &&
+                  item.badge > 0 && (
+                    <span
+                      className={`tabular-nums text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                        item.badgeAlert
+                          ? 'bg-red-500/15 text-red-600 dark:text-red-400'
+                          : 'bg-[#FF9E67] text-white'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )
+                )}
+              </span>
 
               {active && (
                 <span
@@ -155,7 +157,7 @@ export function Sidebar({
         })}
       </nav>
 
-      <div className="my-5 mx-7 border-t border-neutral-100 dark:border-neutral-800" />
+      <div className="my-4 mx-5.5 border-t border-neutral-100 dark:border-neutral-800" />
 
       {/* Secondary System Nav (Admin Restricted) */}
       <nav aria-label="Navigasi Pengaturan &amp; Sistem" className="space-y-1">
@@ -167,23 +169,25 @@ export function Sidebar({
               key={item.id}
               type="button"
               onClick={() => handleSelect(item.id)}
-              className={`relative w-full flex items-center justify-between px-7 py-3 text-[14px] font-medium transition-colors whitespace-nowrap cursor-pointer ${
+              className={`relative w-full flex items-center justify-between gap-2.5 px-5.5 py-2.5 text-[13px] font-medium transition-colors cursor-pointer ${
                 active
                   ? 'text-[#FF9E67]'
                   : 'text-[#4B4B4B] dark:text-neutral-400 hover:text-[#1F1F1F] dark:hover:text-neutral-100'
               }`}
             >
-              <span className="flex items-center gap-3.5">
+              <span className="flex items-center gap-3 min-w-0 flex-1">
                 <Icon
                   className={`w-[18px] h-[18px] shrink-0 ${
                     active ? 'text-[#FF9E67]' : 'text-[#555555] dark:text-neutral-400'
                   }`}
                 />
-                <span>{item.label}</span>
+                <span className="truncate">{item.label}</span>
               </span>
-              {!isAdminUnlocked && (
-                <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
-              )}
+              <span className="shrink-0 flex items-center justify-end w-5">
+                {!isAdminUnlocked && (
+                  <Lock className="w-3.5 h-3.5 text-neutral-400" aria-hidden="true" />
+                )}
+              </span>
               {active && (
                 <span
                   aria-hidden="true"
@@ -199,19 +203,20 @@ export function Sidebar({
           type="button"
           onClick={onToggleDarkMode}
           aria-label={darkMode ? 'Aktifkan Mode Terang' : 'Aktifkan Mode Gelap'}
-          className="w-full flex items-center justify-between px-7 py-3 text-[14px] font-medium text-[#4B4B4B] dark:text-neutral-400 hover:text-[#1F1F1F] dark:hover:text-neutral-100 transition-colors whitespace-nowrap cursor-pointer"
+          className="w-full flex items-center justify-between gap-2.5 px-5.5 py-2.5 text-[13px] font-medium text-[#4B4B4B] dark:text-neutral-400 hover:text-[#1F1F1F] dark:hover:text-neutral-100 transition-colors cursor-pointer"
         >
-          <span className="flex items-center gap-3.5">
+          <span className="flex items-center gap-3 min-w-0 flex-1">
             <span className="w-6 h-6 rounded-full bg-[#FF9E67] text-white flex items-center justify-center shrink-0">
               {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </span>
-            <span>{darkMode ? 'Mode Terang' : 'Mode Gelap'}</span>
+            <span className="truncate">{darkMode ? 'Mode Terang' : 'Mode Gelap'}</span>
           </span>
+          <span className="shrink-0 w-5" />
         </button>
       </nav>
 
       {/* Bottom PIN-Only Admin Security Gate + Demo PIN Display */}
-      <div className="mt-auto px-5 pb-6 pt-4">
+      <div className="mt-auto px-4 pb-5 pt-3">
         {isAdminUnlocked ? (
           <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/25 p-3.5 space-y-2.5">
             <div className="flex items-center gap-2 text-[12px] font-semibold text-emerald-700 dark:text-emerald-400">
@@ -266,7 +271,7 @@ export function Sidebar({
 
   return (
     <>
-      <aside className="hidden lg:block w-[220px] xl:w-[232px] shrink-0 h-screen sticky top-0">
+      <aside className="hidden lg:block w-[236px] xl:w-[248px] shrink-0 h-screen sticky top-0">
         {navContent}
       </aside>
 
