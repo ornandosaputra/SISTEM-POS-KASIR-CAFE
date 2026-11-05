@@ -12,6 +12,14 @@ import { ProductVisual } from './ProductVisual';
 
 const CATEGORIES: MenuCategory[] = ['Coffee', 'Non Coffee', 'Food', 'Snack', 'Dessert'];
 
+const CATEGORY_NAMES_ID: Record<MenuCategory, string> = {
+  'Coffee': 'Kopi',
+  'Non Coffee': 'Non-Kopi',
+  'Food': 'Makanan',
+  'Snack': 'Camilan',
+  'Dessert': 'Makanan Penutup',
+};
+
 interface PosCatalogViewProps {
   products: ProductItem[];
   cartLines: CartLineItem[];
@@ -100,7 +108,7 @@ export function PosCatalogView({
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search..."
+            placeholder="Cari menu kopi, minuman, makanan, atau SKU..."
             className="w-full bg-transparent text-[14px] text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none"
           />
           <button
@@ -195,7 +203,7 @@ export function PosCatalogView({
                     : 'bg-white dark:bg-[#181B20] text-[#555555] dark:text-neutral-300 border border-neutral-200/80 dark:border-neutral-800 hover:border-[#FF9E67]/60'
                 }`}
               >
-                {category}
+                {CATEGORY_NAMES_ID[category]}
               </button>
             );
           })}
@@ -204,7 +212,9 @@ export function PosCatalogView({
         {/* Section Heading */}
         <div className="mt-6 mb-4 flex items-baseline justify-between">
           <h1 className="text-[19px] font-bold text-[#1F1F1F] dark:text-neutral-100 tracking-tight">
-            {searchQuery.trim() ? `Hasil pencarian "${searchQuery}"` : `${selectedCategory} menu`}
+            {searchQuery.trim()
+              ? `Hasil pencarian "${searchQuery}"`
+              : `Menu ${CATEGORY_NAMES_ID[selectedCategory]}`}
           </h1>
           <span className="text-[12.5px] text-neutral-400 tabular-nums">
             {filteredProducts.length} menu tersedia
@@ -293,14 +303,15 @@ export function PosCatalogView({
                         </div>
                       </div>
 
-                      {/* Size Selector matching reference: Small (dark #333) | Large */}
+                      {/* Size Selector matching reference: Reguler | Besar */}
                       <div className="mt-3 flex items-center justify-between gap-2">
                         <span className="text-[12.5px] font-medium text-[#333333] dark:text-neutral-300">
-                          Size
+                          Ukuran
                         </span>
                         <div className="flex items-center gap-1.5">
                           {(['Small', 'Large'] as const).map((sz) => {
                             const sizeActive = size === sz;
+                            const sizeLabel = sz === 'Small' ? 'Reguler' : 'Besar';
                             return (
                               <button
                                 key={sz}
@@ -314,7 +325,7 @@ export function PosCatalogView({
                                     : 'bg-white dark:bg-[#22262E] text-[#555555] dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:border-neutral-400'
                                 }`}
                               >
-                                {sz}
+                                {sizeLabel}
                               </button>
                             );
                           })}
@@ -360,12 +371,12 @@ export function PosCatalogView({
                       }`}
                     >
                       {outOfStock
-                        ? 'Out of stock'
+                        ? 'Stok Habis'
                         : !canCheckout
                           ? 'Akses Kasir Dibatasi'
                           : isAdded
-                            ? 'Added to cart'
-                            : 'Add to Cart'}
+                            ? 'Sudah di Keranjang'
+                            : 'Tambah ke Keranjang'}
                     </button>
                   </div>
                 </article>

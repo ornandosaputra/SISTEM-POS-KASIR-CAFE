@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   CheckCircle2,
+  FileText,
   Lock,
   Pencil,
   Printer,
@@ -15,19 +16,25 @@ import type {
   OrderStatus,
   OrderType,
   PaymentMethod,
+  ReceiptConfig,
 } from '../types';
 import {
   formatMoney,
   validateOrderEditForm,
   type OrderEditInput,
 } from '../utils/posLogic';
-import { printOrderViaThermal } from '../utils/thermalPrinter';
+import {
+  loadReceiptConfig,
+  printOrderViaThermal,
+  printReceiptViaBrowserOrPdf,
+} from '../utils/thermalPrinter';
 
 interface OrdersViewProps {
   orders: OrderRecord[];
   currency: CurrencyCode;
   canRefund: boolean;
   isAdminUnlocked: boolean;
+  receiptConfig?: ReceiptConfig;
   onRequestAdminForCrud: (reason: string, onUnlocked?: () => void) => void;
   onUpdateStatus: (orderId: string, status: OrderStatus) => void;
   onEditOrder: (orderId: string, updates: OrderEditInput) => void;
@@ -40,12 +47,14 @@ export function OrdersView({
   currency,
   canRefund,
   isAdminUnlocked,
+  receiptConfig,
   onRequestAdminForCrud,
   onUpdateStatus,
   onEditOrder,
   onDeleteOrder,
   onNotify,
 }: OrdersViewProps) {
+  const effectiveConfig = receiptConfig || loadReceiptConfig();
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
   const [queryText, setQueryText] = useState('');
 
@@ -73,8 +82,13 @@ export function OrdersView({
   });
 
   const handleReprint = async (order: OrderRecord) => {
-    const res = await printOrderViaThermal(order, currency);
+    const res = await printOrderViaThermal(order, currency, effectiveConfig);
     onNotify(`Cetak ulang struk ${order.orderNumber} terkirim ke ${res.channel}.`);
+  };
+
+  const handlePrintPdf = async (order: OrderRecord) => {
+    await printReceiptViaBrowserOrPdf(order, currency, effectiveConfig);
+    onNotify(`Dialog cetak PDF untuk pesanan ${order.orderNumber} terbuka.`);
   };
 
   const openEditOrderModal = (order: OrderRecord) => {
@@ -288,10 +302,21 @@ export function OrdersView({
                 <button
                   type="button"
                   onClick={() => handleReprint(order)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-neutral-200 dark:border-neutral-700 text-[12px] font-medium text-neutral-700 dark:text-neutral-200 hover:border-[#FF9E67] cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-700 text-[12px] font-medium text-neutral-700 dark:text-neutral-200 hover:border-[#FF9E67] cursor-pointer"
+                  title="Cetak via printer termal Bluetooth/ESC-POS"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span>Cetak Struk</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handlePrintPdf(order)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#FF9E67]/50 bg-[#FF9E67]/10 text-[12px] font-medium text-[#FF9E67] hover:bg-[#FF9E67] hover:text-white transition-colors cursor-pointer"
+                  title="Cetak atau unduh dokumen PDF struk"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Cetak PDF</span>
                 </button>
 
                 {order.status !== 'refunded' && (

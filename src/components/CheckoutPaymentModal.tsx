@@ -3,6 +3,7 @@ import {
   Bluetooth,
   CheckCircle2,
   CreditCard,
+  FileText,
   Loader2,
   Printer,
   QrCode,
@@ -16,9 +17,15 @@ import type {
   OrderRecord,
   OrderType,
   PaymentMethod,
+  ReceiptConfig,
 } from '../types';
 import { formatMoney } from '../utils/posLogic';
-import { printOrderViaThermal, type ThermalPrinterState } from '../utils/thermalPrinter';
+import {
+  printOrderViaThermal,
+  printReceiptViaBrowserOrPdf,
+  loadReceiptConfig,
+  type ThermalPrinterState,
+} from '../utils/thermalPrinter';
 
 interface CheckoutPaymentModalProps {
   open: boolean;
@@ -32,6 +39,7 @@ interface CheckoutPaymentModalProps {
   totalCents: number;
   currency: CurrencyCode;
   printerState: ThermalPrinterState;
+  receiptConfig?: ReceiptConfig;
   onConnectPrinter: () => Promise<void>;
   onConfirmPaidOrder: (method: PaymentMethod, paymentRef: string) => OrderRecord;
 }
@@ -48,9 +56,11 @@ export function CheckoutPaymentModal({
   totalCents,
   currency,
   printerState,
+  receiptConfig,
   onConnectPrinter,
   onConfirmPaidOrder,
 }: CheckoutPaymentModalProps) {
+  const effectiveReceiptConfig = receiptConfig || loadReceiptConfig();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('QRIS');
   const [ewalletProvider, setEwalletProvider] = useState<'GoPay' | 'OVO' | 'DANA'>('GoPay');
   const [cashTenderedRupiah, setCashTenderedRupiah] = useState<string>('');
@@ -58,6 +68,7 @@ export function CheckoutPaymentModal({
   const [virtualAccount, setVirtualAccount] = useState<string>('88081294881024');
   const [verifying, setVerifying] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<OrderRecord | null>(null);
+  const [isPrintingPdf, setIsPrintingPdf] = useState(false);
   const [printStatusMsg, setPrintStatusMsg] = useState<string>('');
 
   useEffect(() => {
@@ -118,10 +129,23 @@ export function CheckoutPaymentModal({
 
   const handleThermalPrint = async () => {
     if (!completedOrder) return;
-    const res = await printOrderViaThermal(completedOrder, currency);
+    const res = await printOrderViaThermal(completedOrder, currency, effectiveReceiptConfig);
     setPrintStatusMsg(
-      `Struk ${completedOrder.orderNumber} (${res.bytesSent} bytes ESC/POS) dikirim ke ${res.channel}.`
+      `Struk ${completedOrder.orderNumber} (${res.bytesSent} bytes ESC/POS) berhasil dikirim ke ${res.channel}.`
     );
+  };
+
+  const handlePrintPdf = async () => {
+    if (!completedOrder) return;
+    setIsPrintingPdf(true);
+    try {
+      const ok = await printReceiptViaBrowserOrPdf(completedOrder, currency, effectiveReceiptConfig);
+      if (ok) {
+        setPrintStatusMsg(`Dokumen PDF/Cetak struk ${completedOrder.orderNumber} siap dicetak atau disimpan.`);
+      }
+    } finally {
+      setIsPrintingPdf(false);
+    }
   };
 
   return (
@@ -403,17 +427,40 @@ export function CheckoutPaymentModal({
                 className="rounded-2xl bg-[#FBFBF9] dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-5 font-mono text-[12px] text-neutral-800 dark:text-neutral-200 space-y-2"
               >
                 <div className="text-center border-b border-dashed border-neutral-300 dark:border-neutral-700 pb-3">
-                  <div className="text-[14px] font-bold">PURR&apos;COFFEE POS</div>
-                  <div className="text-[11px] text-neutral-500">Jl. Senopati No. 48, Jakarta</div>
+                  <div className="text-[14px] font-bold tracking-wide">
+                    {effectiveReceiptConfig.storeName}
+                  </div>
+                  <div className="text-[11px] text-neutral-500 mt-0.5">
+                    {effectiveReceiptConfig.streetAddress}
+                  </div>
+                  {effectiveReceiptConfig.phone && (
+                    <div className="text-[10.5px] text-neutral-400">
+                      Telp: {effectiveReceiptConfig.phone}
+                    </div>
+                  )}
+                  {effectiveReceiptConfig.headerMessage && (
+                    <div className="text-[10.5px] text-neutral-500 italic mt-0.5">
+                      {effectiveReceiptConfig.headerMessage}
+                    </div>
+                  )}
                 </div>
+
                 <div className="space-y-0.5 text-[11px] pt-1">
                   <div className="flex justify-between">
-                    <span>Order:</span>
-                    <span>{completedOrder.orderNumber}</span>
+                    <span>No. Order:</span>
+                    <span className="font-bold">{completedOrder.orderNumber}</span>
                   </div>
+                  {effectiveReceiptConfig.showOrderType && (
+                    <div className="flex justify-between">
+                      <span>Layanan:</span>
+                      <span>{completedOrder.orderType}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
-                    <span>Layanan:</span>
-                    <span>{completedOrder.orderType}</span>
+                    <span>Kasir:</span>
+                    <span>
+                      {effectiveReceiptConfig.cashierNameOverride.trim() || completedOrder.cashierName}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Metode:</span>
@@ -421,11 +468,14 @@ export function CheckoutPaymentModal({
                       {completedOrder.paymentMethod} ({completedOrder.paymentRef})
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Kasir:</span>
-                    <span>{completedOrder.cashierName}</span>
-                  </div>
+                  {effectiveReceiptConfig.showDate && (
+                    <div className="flex justify-between">
+                      <span>Waktu:</span>
+                      <span>{new Date(completedOrder.createdAtMs).toLocaleString('id-ID')}</span>
+                    </div>
+                  )}
                 </div>
+
                 <div className="border-t border-b border-dashed border-neutral-300 dark:border-neutral-700 py-2 space-y-1">
                   {completedOrder.lines.map((l) => (
                     <div key={l.id} className="flex justify-between tabular-nums">
@@ -436,6 +486,7 @@ export function CheckoutPaymentModal({
                     </div>
                   ))}
                 </div>
+
                 <div className="space-y-1 tabular-nums">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
@@ -451,10 +502,14 @@ export function CheckoutPaymentModal({
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between font-bold text-[13px] pt-1">
+                  <div className="flex justify-between font-bold text-[13px] pt-1 text-[#FF9E67]">
                     <span>TOTAL LUNAS</span>
                     <span>{formatMoney(completedOrder.totalCents, currency)}</span>
                   </div>
+                </div>
+
+                <div className="border-t border-dashed border-neutral-300 dark:border-neutral-700 pt-3 text-center text-[10.5px] text-neutral-500 whitespace-pre-line">
+                  {effectiveReceiptConfig.footerNote}
                 </div>
               </div>
 
@@ -464,8 +519,7 @@ export function CheckoutPaymentModal({
                   <div className="text-[13px]">
                     <p className="font-bold">Transaksi &amp; Stok Tersinkronisasi</p>
                     <p className="mt-0.5 opacity-90">
-                      Laporan harian real-time, pengurangan inventaris, dan cloud sync telah
-                      diperbarui otomatis.
+                      Laporan harian real-time, pengurangan inventaris, dan cloud sync telah diperbarui otomatis.
                     </p>
                   </div>
                 </div>
@@ -478,27 +532,38 @@ export function CheckoutPaymentModal({
                     <span className="text-neutral-500">{printerState.deviceName}</span>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2.5">
+                  {/* Dual Print Action Buttons: Thermal ESC/POS & Cetak PDF */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <button
                       type="button"
                       onClick={handleThermalPrint}
-                      className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-[#333333] hover:bg-neutral-800 text-white text-[12.5px] font-semibold cursor-pointer"
+                      className="inline-flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-full bg-[#333333] hover:bg-neutral-800 text-white text-[12.5px] font-semibold cursor-pointer"
                     >
                       <Printer className="w-4 h-4" />
-                      <span>Cetak Struk ESC/POS</span>
+                      <span>Cetak Struk (Termal)</span>
                     </button>
 
-                    {!printerState.connected && (
-                      <button
-                        type="button"
-                        onClick={onConnectPrinter}
-                        className="inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-full border border-neutral-300 dark:border-neutral-700 text-[12.5px] font-medium text-neutral-700 dark:text-neutral-200 cursor-pointer"
-                      >
-                        <Bluetooth className="w-4 h-4 text-[#FF9E67]" />
-                        <span>Pair BLE</span>
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      disabled={isPrintingPdf}
+                      onClick={handlePrintPdf}
+                      className="inline-flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-full bg-[#FF9E67] hover:bg-[#f58d52] disabled:opacity-50 text-white text-[12.5px] font-semibold cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>{isPrintingPdf ? 'Membuka PDF...' : 'Cetak / Unduh PDF'}</span>
+                    </button>
                   </div>
+
+                  {!printerState.connected && (
+                    <button
+                      type="button"
+                      onClick={onConnectPrinter}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-full border border-neutral-300 dark:border-neutral-700 text-[12px] font-medium text-neutral-700 dark:text-neutral-200 hover:border-[#FF9E67] cursor-pointer"
+                    >
+                      <Bluetooth className="w-3.5 h-3.5 text-[#FF9E67]" />
+                      <span>Hubungkan Printer BLE (Web Bluetooth)</span>
+                    </button>
+                  )}
 
                   {printStatusMsg && (
                     <p className="text-[12px] text-emerald-600 dark:text-emerald-400 font-medium">
@@ -510,9 +575,9 @@ export function CheckoutPaymentModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full py-3 rounded-full bg-[#FF9E67] hover:bg-[#f58d52] text-white text-[13.5px] font-semibold cursor-pointer"
+                  className="w-full py-3 rounded-full bg-[#333333] hover:bg-neutral-800 text-white text-[13.5px] font-semibold cursor-pointer transition-colors"
                 >
-                  Transaksi Baru
+                  Selesai &amp; Transaksi Baru
                 </button>
               </div>
             </div>

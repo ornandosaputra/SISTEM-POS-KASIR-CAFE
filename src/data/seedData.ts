@@ -17,7 +17,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     name: 'Cappucino',
     category: 'Coffee',
     description:
-      'The combination of coffee, milk, and palm sugar makes this drink have a delicious taste.',
+      'Perpaduan espresso mantap, susu segar lembut, dan gula aren pilihan yang menghasilkan cita rasa manis gurih memikat.',
     priceCents: 28000,
     costCents: 10000,
     stock: 9,
@@ -32,7 +32,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     name: 'Coffee Latte',
     category: 'Coffee',
     description:
-      'This caffe latte or coffee latte is one of the popular types of milk coffee.',
+      'Kopi latte favorit dengan paduan espresso kaya rasa dan kelembutan susu bertekstur microfoam yang creamy.',
     priceCents: 32000,
     costCents: 11500,
     stock: 26,
@@ -47,7 +47,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     name: 'Americano',
     category: 'Coffee',
     description:
-      'Americano coffee is espresso drinks combined with hot or chilled filtered water.',
+      'Kopi hitam klasik dari espresso pilihan yang diseduh dengan air murni, menghasilkan rasa segar, bersih, dan berkarakter.',
     priceCents: 25000,
     costCents: 8000,
     stock: 32,
@@ -62,7 +62,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     name: 'V60',
     category: 'Coffee',
     description:
-      'The V60 technique is one of the most used pour-over techniques by barista.',
+      'Seduhan kopi manual pour-over dengan metode V60 untuk mengeluarkan aroma harum dan keasaman buah yang jernih seimbang.',
     priceCents: 34000,
     costCents: 12000,
     stock: 6,
@@ -77,7 +77,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     name: 'Uji Matcha Oat Latte',
     category: 'Non Coffee',
     description:
-      'Ceremonial grade Kyoto matcha whisked over creamy oat milk and light cane syrup.',
+      'Matcha kualitas seremonial dari Kyoto berpadu dengan gurihnya susu oat alami dan sirup tebu murni.',
     priceCents: 35000,
     costCents: 13000,
     stock: 19,
@@ -92,7 +92,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     name: 'Valrhona Iced Chocolate',
     category: 'Non Coffee',
     description:
-      'Single-origin 70% dark chocolate ganache blended with cold fresh milk.',
+      'Cokelat hitam premium Valrhona 70% single-origin yang dipadukan harmonis dengan susu segar dingin bertekstur lembut.',
     priceCents: 33000,
     costCents: 12000,
     stock: 15,
@@ -107,7 +107,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     name: 'Espresso Butter Croissant',
     category: 'Food',
     description:
-      'Artisan laminated French butter pastry finished with espresso glaze and sugar dust.',
+      'Pastry mentega Prancis dengan lapisan renyah lembut, diberi lapisan espresso glaze harum dan taburan gula halus.',
     priceCents: 26000,
     costCents: 9500,
     stock: 14,
@@ -122,7 +122,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     name: 'Truffle Egg Brioche',
     category: 'Food',
     description:
-      'Toasted Hokkaido brioche filled with soft scrambled eggs, chives, and cheddar.',
+      'Roti brioche lembut khas Hokkaido berisi telur orak-arik lumer, minyak truffle aromatik, daun kucai, dan keju cheddar.',
     priceCents: 42000,
     costCents: 16000,
     stock: 11,
@@ -137,7 +137,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     name: 'Cinnamon Coffee Churros',
     category: 'Snack',
     description:
-      'Crisp golden churro bites dusted with cinnamon sugar and espresso dip.',
+      'Churros renyah keemasan bertabur gula kayu manis wangi, disajikan hangat dengan saus celup espresso spesial.',
     priceCents: 24000,
     costCents: 8500,
     stock: 5,
@@ -152,7 +152,7 @@ export const INITIAL_PRODUCTS: ProductItem[] = [
     name: 'Classic Mascarpone Tiramisu',
     category: 'Dessert',
     description:
-      'Savoiardi ladyfingers soaked in house espresso layered with velvety mascarpone.',
+      'Kue ladyfingers lembut yang direndam espresso pekat, berlapis krim mascarpone lembut dan taburan bubuk kakao murni.',
     priceCents: 38000,
     costCents: 14000,
     stock: 12,

@@ -43,6 +43,7 @@ import type {
   PaymentMethod,
   ProductItem,
   PushNotificationItem,
+  ReceiptConfig,
   RolePermissions,
   StaffMemberRecord,
 } from './types';
@@ -67,6 +68,8 @@ import {
 } from './utils/posLogic';
 import {
   connectBluetoothThermalPrinter,
+  loadReceiptConfig,
+  saveReceiptConfig,
   type ThermalPrinterState,
 } from './utils/thermalPrinter';
 import { Sidebar } from './components/Sidebar';
@@ -115,6 +118,13 @@ export default function App() {
   const [adminModalOpen, setAdminModalOpen] = useState<boolean>(false);
   const [adminModalReason, setAdminModalReason] = useState<string>('');
   const pendingAdminActionRef = useRef<(() => void) | null>(null);
+
+  const [receiptConfig, setReceiptConfig] = useState<ReceiptConfig>(() => loadReceiptConfig());
+
+  const handleUpdateReceiptConfig = (nextConfig: ReceiptConfig) => {
+    setReceiptConfig(nextConfig);
+    saveReceiptConfig(nextConfig);
+  };
 
   const [backups, setBackups] = useState<CloudBackupRecord[]>(INITIAL_BACKUPS);
   const [notifications, setNotifications] =
@@ -891,6 +901,7 @@ export default function App() {
             currency={currency}
             canRefund={hasPermission(activeStaff, 'canRefund')}
             isAdminUnlocked={isAdminUnlocked}
+            receiptConfig={receiptConfig}
             onRequestAdminForCrud={requestAdminElevation}
             onUpdateStatus={handleUpdateOrderStatus}
             onEditOrder={handleEditOrder}
@@ -923,6 +934,8 @@ export default function App() {
             }
             adminConfig={adminConfig}
             onUpdateAdminConfig={handleUpdateAdminSecurityConfig}
+            receiptConfig={receiptConfig}
+            onUpdateReceiptConfig={handleUpdateReceiptConfig}
             lastCloudSyncLabel={lastCloudSyncLabel}
             onCreateCloudBackup={handleCreateCloudBackup}
             backups={backups}
@@ -1013,7 +1026,7 @@ export default function App() {
           >
             <span>Keranjang · {cartTotals.totalQuantity} item</span>
             <span className="text-[#FF9E67] tabular-nums">
-              {formatMoney(cartTotals.totalCents, currency)} · Lihat Cart
+              {formatMoney(cartTotals.totalCents, currency)} · Buka Keranjang
             </span>
           </button>
         </div>
@@ -1046,6 +1059,7 @@ export default function App() {
         totalCents={cartTotals.totalCents}
         currency={currency}
         printerState={printerState}
+        receiptConfig={receiptConfig}
         onConnectPrinter={handleConnectPrinter}
         onConfirmPaidOrder={handleConfirmPaidOrder}
       />

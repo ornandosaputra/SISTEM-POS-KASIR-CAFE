@@ -15,6 +15,12 @@ import { ALBERT_AVATAR_URL, ProductVisual } from './ProductVisual';
 
 const ORDER_TYPES: OrderType[] = ['Delivery', 'Dine in', 'Take away'];
 
+const ORDER_TYPE_LABELS_ID: Record<OrderType, string> = {
+  'Delivery': 'Antar',
+  'Dine in': 'Makan di Tempat',
+  'Take away': 'Bawa Pulang',
+};
+
 interface CartSidebarProps {
   activeStaff: StaffMemberRecord;
   allStaff: StaffMemberRecord[];
@@ -163,10 +169,10 @@ export function CartSidebar({
 
       {/* Cart Header & Order #3243 */}
       <div className="px-6 pt-6 pb-3 flex items-baseline justify-between">
-        <h2 className="text-[19px] font-bold text-[#1F1F1F] dark:text-neutral-100">Cart</h2>
+        <h2 className="text-[19px] font-bold text-[#1F1F1F] dark:text-neutral-100">Keranjang Belanja</h2>
         <div className="flex items-center gap-2">
           <span className="text-[12.5px] text-[#ADADAD] dark:text-neutral-400 tabular-nums">
-            Order #{nextOrderNumber.replace(/^ORD-/, '')}
+            Pesanan #{nextOrderNumber.replace(/^ORD-/, '')}
           </span>
           {cartLines.length > 0 && (
             <button
@@ -196,7 +202,7 @@ export function CartSidebar({
                   : 'bg-white dark:bg-[#22262E] text-[#555555] dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:border-neutral-400'
               }`}
             >
-              {type}
+              {ORDER_TYPE_LABELS_ID[type]}
             </button>
           );
         })}
@@ -219,6 +225,7 @@ export function CartSidebar({
         ) : (
           cartLines.map((line) => {
             const lineSubtotal = line.unitPriceCents * line.quantity;
+            const sizeLabel = line.size === 'Small' ? 'Reguler' : 'Besar';
             return (
               <div key={line.id} className="py-4 first:pt-2 flex items-center gap-3.5">
                 <div className="w-[68px] h-[76px] rounded-[16px] overflow-hidden shrink-0">
@@ -230,7 +237,7 @@ export function CartSidebar({
                     {line.productName}
                   </h3>
                   <p className="text-[11.5px] text-[#ADADAD] dark:text-neutral-400 mt-0.5 tabular-nums">
-                    <span>{line.size}</span>
+                    <span>{sizeLabel}</span>
                     <span aria-hidden="true"> · </span>
                     <span>{line.weightGrams}g</span>
                   </p>
@@ -300,14 +307,14 @@ export function CartSidebar({
 
         <div className="space-y-2 text-[13.5px]">
           <div className="flex items-center justify-between">
-            <span className="text-[#ADADAD] dark:text-neutral-400">Items</span>
+            <span className="text-[#ADADAD] dark:text-neutral-400">Subtotal Menu</span>
             <span className="font-semibold text-[#1F1F1F] dark:text-neutral-100 tabular-nums">
               {formatMoney(totals.itemsSubtotalCents, currency)}
             </span>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-[#ADADAD] dark:text-neutral-400">Discounts</span>
+            <span className="text-[#ADADAD] dark:text-neutral-400">Potongan Diskon</span>
             <span className="font-semibold text-[#1F1F1F] dark:text-neutral-100 tabular-nums">
               {totals.discountCents > 0
                 ? formatMoney(totals.discountCents, currency, { signedNegative: true })
@@ -316,7 +323,7 @@ export function CartSidebar({
           </div>
 
           <div className="pt-2 border-t border-dashed border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
-            <span className="text-[#ADADAD] dark:text-neutral-400">Total</span>
+            <span className="text-[#ADADAD] dark:text-neutral-400">Total Pembayaran</span>
             <span className="text-[15.5px] font-bold text-[#FF9E67] tabular-nums">
               {formatMoney(totals.totalCents, currency)}
             </span>
@@ -329,7 +336,7 @@ export function CartSidebar({
           onClick={onOpenCheckout}
           className="w-full mt-2 py-3.5 px-6 rounded-full bg-[#FF9E67] hover:bg-[#f58d52] disabled:opacity-45 disabled:cursor-not-allowed text-white text-[14px] font-semibold transition-colors cursor-pointer"
         >
-          {!canCheckout ? 'Akses Checkout Dibatasi' : 'Place an order'}
+          {!canCheckout ? 'Akses Checkout Dibatasi' : 'Proses Pembayaran'}
         </button>
       </div>
     </div>

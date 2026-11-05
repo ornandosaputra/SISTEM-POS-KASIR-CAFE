@@ -498,9 +498,17 @@ export function InventoryView({
                   onChange={(e) => setCategory(e.target.value as MenuCategory)}
                   className="w-full px-3.5 py-2 rounded-xl bg-[#F7F7F8] dark:bg-[#22262E] border border-neutral-200 dark:border-neutral-700"
                 >
-                  {(['Coffee', 'Non Coffee', 'Food', 'Snack', 'Dessert'] as const).map((c) => (
-                    <option key={c} value={c}>
-                      {c}
+                  {(
+                    [
+                      { id: 'Coffee', label: 'Kopi' },
+                      { id: 'Non Coffee', label: 'Non-Kopi' },
+                      { id: 'Food', label: 'Makanan' },
+                      { id: 'Snack', label: 'Camilan' },
+                      { id: 'Dessert', label: 'Makanan Penutup' },
+                    ] as const
+                  ).map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
                     </option>
                   ))}
                 </select>

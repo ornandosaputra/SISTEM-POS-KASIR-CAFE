@@ -110,3 +110,15 @@ export interface PushNotificationItem {
   createdAtMs: number;
   read: boolean;
 }
+
+export interface ReceiptConfig {
+  storeName: string;
+  streetAddress: string;
+  phone: string;
+  headerMessage: string;
+  footerNote: string;
+  cashierNameOverride: string;
+  showDate: boolean;
+  showOrderType: boolean;
+  paperWidthMm: 58 | 80;
+}

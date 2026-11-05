@@ -22,7 +22,12 @@ import {
   validateNewAdminPin,
   verifyAdminPinAttempt,
 } from './adminAuth';
-import type { CartLineItem, OrderRecord, ProductItem, StaffMemberRecord } from '../types';
+import {
+  DEFAULT_RECEIPT_CONFIG,
+  encodeEscPosReceipt,
+  generateReceiptHtml,
+} from './thermalPrinter';
+import type { CartLineItem, OrderRecord, ProductItem, ReceiptConfig, StaffMemberRecord } from '../types';
 
 test('Purr Coffee cart math in Rupiah computes Rp 116.000 - Rp 15.000 = Rp 101.000', () => {
   const lines: CartLineItem[] = [
@@ -377,4 +382,63 @@ test('Analytics summary aggregates Rupiah revenue, excludes refunded orders, and
   assert.equal(summary.totalOrders, 1);
   assert.equal(summary.refundedCount, 1);
   assert.equal(summary.lowStockCount, 1);
+});
+
+test('Receipt structure customizer updates store name, street address, and cashier override dynamically', () => {
+  const customConfig: ReceiptConfig = {
+    ...DEFAULT_RECEIPT_CONFIG,
+    storeName: 'KEDAI KOPI MEWAH JAYA',
+    streetAddress: 'Jl. Malioboro No. 12, Yogyakarta',
+    phone: '0819-9988-7766',
+    cashierNameOverride: 'Siti Rahma (Supervisor)',
+    footerNote: 'Matur Nuwun / Sampai Jumpa Lagi!',
+    showOrderType: true,
+    showDate: true,
+    paperWidthMm: 80,
+  };
+
+  const sampleOrder: OrderRecord = {
+    id: 'ord-test-custom',
+    orderNumber: 'ORD-9999',
+    orderType: 'Dine in',
+    paymentMethod: 'QRIS',
+    paymentRef: 'QRIS-DYNAMIC',
+    subtotalCents: 45000,
+    discountCents: 5000,
+    totalCents: 40000,
+    itemCount: 1,
+    itemsLabel: '1x V60 Specialty (Reguler)',
+    cashierName: 'Albert Flores',
+    status: 'completed',
+    createdAtMs: 1_750_000_000_000,
+    lines: [
+      {
+        id: 'line-v60',
+        productId: 'prod-v60',
+        productName: 'V60 Specialty',
+        imageKey: 'v60',
+        size: 'Small',
+        weightGrams: 200,
+        quantity: 1,
+        unitPriceCents: 45000,
+      },
+    ],
+  };
+
+  const escPosBytes = encodeEscPosReceipt(sampleOrder, 'IDR', customConfig);
+  const textOutput = new TextDecoder().decode(escPosBytes);
+
+  assert.ok(textOutput.includes('KEDAI KOPI MEWAH JAYA'), 'Includes custom store name');
+  assert.ok(textOutput.includes('Jl. Malioboro No. 12, Yogyakarta'), 'Includes custom street address');
+  assert.ok(textOutput.includes('0819-9988-7766'), 'Includes custom phone');
+  assert.ok(textOutput.includes('Siti Rahma (Supervisor)'), 'Includes cashier name override');
+  assert.ok(textOutput.includes('Matur Nuwun / Sampai Jumpa Lagi!'), 'Includes custom footer note');
+  assert.ok(textOutput.includes('Rp 40.000'), 'Includes formatted Rupiah total');
+
+  const htmlOutput = generateReceiptHtml(sampleOrder, 'IDR', customConfig);
+  assert.ok(htmlOutput.includes('KEDAI KOPI MEWAH JAYA'));
+  assert.ok(htmlOutput.includes('Jl. Malioboro No. 12, Yogyakarta'));
+  assert.ok(htmlOutput.includes('Siti Rahma (Supervisor)'));
+  assert.ok(htmlOutput.includes('Matur Nuwun / Sampai Jumpa Lagi!'));
+  assert.ok(htmlOutput.includes('80mm auto'));
 });

@@ -53,22 +53,22 @@ export function Sidebar({
     badge?: number;
     badgeAlert?: boolean;
   }[] = [
-    { id: 'pos', label: 'Home page', icon: Home },
+    { id: 'pos', label: 'Beranda', icon: Home },
     {
       id: 'inventory',
-      label: 'Inventory',
+      label: 'Inventaris',
       icon: Boxes,
       badge: lowStockCount > 0 ? lowStockCount : undefined,
       badgeAlert: true,
     },
-    { id: 'orders', label: 'My orders', icon: Receipt, badge: ordersCount },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'orders', label: 'Riwayat Pesanan', icon: Receipt, badge: ordersCount },
+    { id: 'analytics', label: 'Analitik Bisnis', icon: BarChart3 },
   ];
 
   const secondaryItems: { id: NavSection; label: string; icon: typeof Users }[] = [
-    { id: 'users', label: 'Multi-User', icon: Users },
-    { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'api', label: 'API & Docs', icon: BookOpen },
+    { id: 'users', label: 'Manajemen Staf', icon: Users },
+    { id: 'settings', label: 'Pengaturan Struk & Sistem', icon: Settings },
+    { id: 'api', label: 'Dokumentasi API', icon: BookOpen },
   ];
 
   const handleSelect = (id: NavSection) => {
@@ -92,7 +92,7 @@ export function Sidebar({
           <button
             type="button"
             onClick={onCloseMobile}
-            aria-label="Close navigation menu"
+            aria-label="Tutup menu navigasi"
             className="lg:hidden p-2 rounded-lg text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
             <X className="w-5 h-5" />
@@ -101,7 +101,7 @@ export function Sidebar({
       </div>
 
       {/* Primary POS Nav */}
-      <nav aria-label="Primary POS navigation" className="px-0 space-y-1">
+      <nav aria-label="Navigasi Utama POS" className="px-0 space-y-1">
         {primaryItems.map((item) => {
           const Icon = item.icon;
           const active = activeNav === item.id;
@@ -158,7 +158,7 @@ export function Sidebar({
       <div className="my-5 mx-7 border-t border-neutral-100 dark:border-neutral-800" />
 
       {/* Secondary System Nav (Admin Restricted) */}
-      <nav aria-label="Workspace and developer navigation" className="space-y-1">
+      <nav aria-label="Navigasi Pengaturan &amp; Sistem" className="space-y-1">
         {secondaryItems.map((item) => {
           const Icon = item.icon;
           const active = activeNav === item.id;
@@ -205,7 +205,7 @@ export function Sidebar({
             <span className="w-6 h-6 rounded-full bg-[#FF9E67] text-white flex items-center justify-center shrink-0">
               {darkMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </span>
-            <span>{darkMode ? 'Light mode' : 'Dark mode'}</span>
+            <span>{darkMode ? 'Mode Terang' : 'Mode Gelap'}</span>
           </span>
         </button>
       </nav>
